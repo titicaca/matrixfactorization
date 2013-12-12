@@ -12,10 +12,17 @@ public class Util{
 	public static final int USER_ID_POS = 0;
 	public static final int ITEM_ID_POS = 1;
 	public static final int RATING_POS = 2;
+	
+	public static final double lambda = 0.1;
+	public static final int numFeatures = 10;
+	
+	public static final int numUsers = 943;
+	public static final int numItems = 1682;
 
 	/** Standard delimiter of textual preference data */
 	private static final Pattern PREFERENCE_TOKEN_DELIMITER = Pattern
 			.compile("[\t,]");
+
 
 	private Util() {
 	}
