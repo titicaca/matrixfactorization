@@ -1,13 +1,8 @@
-package de.tu_berlin.dima.bigdata.matrixfactorization;
+package de.tu_berlin.dima.bigdata.matrixfactorization.solve;
 
 import de.tu_berlin.dima.bigdata.matrixfactorization.itemrating.ItemRatingVectorMapper;
+import de.tu_berlin.dima.bigdata.matrixfactorization.itemrating.ItemRatingVectorPlan;
 import de.tu_berlin.dima.bigdata.matrixfactorization.itemrating.ItemRatingVectorReducer;
-import de.tu_berlin.dima.bigdata.matrixfactorization.solve.FeatureMatrixUpdatePlan;
-import de.tu_berlin.dima.bigdata.matrixfactorization.solve.InitItemFeatureMatrixMapper;
-import de.tu_berlin.dima.bigdata.matrixfactorization.solve.ItemFeatureMatrixCrosser;
-import de.tu_berlin.dima.bigdata.matrixfactorization.solve.ItemFeatureMatrixReducer;
-import de.tu_berlin.dima.bigdata.matrixfactorization.solve.UserFeatureMatrixCrosser;
-import de.tu_berlin.dima.bigdata.matrixfactorization.solve.UserFeatureMatrixReducer;
 import de.tu_berlin.dima.bigdata.matrixfactorization.type.PactVector;
 import de.tu_berlin.dima.bigdata.matrixfactorization.userrating.UserRatingVectorMapper;
 import de.tu_berlin.dima.bigdata.matrixfactorization.userrating.UserRatingVectorReducer;
@@ -23,18 +18,9 @@ import eu.stratosphere.pact.common.plan.Plan;
 import eu.stratosphere.pact.common.plan.PlanAssembler;
 import eu.stratosphere.pact.common.plan.PlanAssemblerDescription;
 import eu.stratosphere.pact.common.type.base.PactInteger;
-import eu.stratosphere.pact.common.type.base.PactString;
-import eu.stratosphere.pact.generic.contract.IterationContract;
 
-public class MatrixFactorizationPlan implements PlanAssembler, PlanAssemblerDescription{
-	  
-	private final int numIterations = 10;
-	
-	private final CrossContract userFeatureMatrixCrossers[] = new CrossContract[100];
-	private final CrossContract itemFeatureMatrixCrossers[] = new CrossContract[100];
-	private final ReduceContract userFeatureMatrixReducers[] = new ReduceContract[100];
-	private final ReduceContract itemFeatureMatrixReducers[] = new ReduceContract[100];
-	
+
+public class FeatureMatrixUpdatePlan implements PlanAssembler, PlanAssemblerDescription{
 	@Override
 	public String getDescription() {
 		return "Usage: [inputPath] [outputPath] ([numSubtasks])";
@@ -72,45 +58,20 @@ public class MatrixFactorizationPlan implements PlanAssembler, PlanAssemblerDesc
 				.builder(ItemFeatureMatrixReducer.class, PactInteger.class, 0)
 				.input(initItemFeatureMatrixMapper).name("init Item Feature Matrix Reducer").build();
 		
-		userFeatureMatrixCrossers[0] = CrossContract
+		CrossContract userFeatureMatrixCrosser = CrossContract
 				.builder(UserFeatureMatrixCrosser.class).input1(userRatingVectorReducer).input2(initItemFeatureMatrixReducer)
-				.name("User Feature Matrix Update Crosser 1").build();
+				.name("User Feature Matrix Update Crosser").build();
 		
-		userFeatureMatrixReducers[0] = ReduceContract
-				.builder(UserFeatureMatrixReducer.class, PactInteger.class, 0).input(userFeatureMatrixCrossers[0])
-				.name("User Feature Matrix Update Reducer 1").build();
+		ReduceContract userFeatureMatrixReducer = ReduceContract
+				.builder(UserFeatureMatrixReducer.class, PactInteger.class, 0).input(userFeatureMatrixCrosser)
+				.name("User Feature Matrix Update Reducer").build();
 		
-		for(int i = 1; i < numIterations; i ++){
-//			System.out.println("iteration :" + i);
-			itemFeatureMatrixCrossers[i-1] = CrossContract
-					.builder(ItemFeatureMatrixCrosser.class).input1(itemRatingVectorReducer).input2(userFeatureMatrixReducers[i-1])
-					.name("Item Feature Matrix Update Crosser " + (i)).build();
-			
-			itemFeatureMatrixReducers[i-1] = ReduceContract
-					.builder(ItemFeatureMatrixReducer.class, PactInteger.class, 0).input(itemFeatureMatrixCrossers[i-1])
-					.name("Item Feature Matrix Update Reducer " + (i)).build();
-			
-			userFeatureMatrixCrossers[i] = CrossContract
-					.builder(UserFeatureMatrixCrosser.class).input1(userRatingVectorReducer).input2(itemFeatureMatrixReducers[i-1])
-					.name("User Feature Matrix Update Crosser " + (i+1)).build();
-			
-			userFeatureMatrixReducers[i] = ReduceContract
-					.builder(UserFeatureMatrixReducer.class, PactInteger.class, 0).input(userFeatureMatrixCrossers[i])
-					.name("User Feature Matrix Update Reducer " + (i+1)).build();
-		}
-		
-		itemFeatureMatrixCrossers[numIterations-1] = CrossContract
-				.builder(ItemFeatureMatrixCrosser.class).input1(itemRatingVectorReducer).input2(userFeatureMatrixReducers[numIterations-1])
-				.name("Item Feature Matrix Update Crosser " + (numIterations)).build();
-		
-		itemFeatureMatrixReducers[numIterations-1] = ReduceContract
-				.builder(ItemFeatureMatrixReducer.class, PactInteger.class, 0).input(itemFeatureMatrixCrossers[numIterations-1])
-				.name("Item Feature Matrix Update Reducer " + (numIterations)).build();
+		CrossContract itemFeatureMatrixCrosser = CrossContract
+				.builder(ItemFeatureMatrixCrosser.class).input1(itemRatingVectorReducer).input2(userFeatureMatrixReducer)
+				.name("Item Feature Matrix Update Crosser").build();
 		
 		
-		
-		
-		FileDataSink sink = new FileDataSink(RecordOutputFormat.class, outputPath, itemFeatureMatrixCrossers[numIterations-1], "Item Feature Vectors");
+		FileDataSink sink = new FileDataSink(RecordOutputFormat.class, outputPath, itemFeatureMatrixCrosser, "Item Feature Vectors");
 		RecordOutputFormat.configureRecordFormat(sink)
 			.recordDelimiter('\n')
 			.fieldDelimiter(' ')
@@ -128,13 +89,13 @@ public class MatrixFactorizationPlan implements PlanAssembler, PlanAssemblerDesc
 
 		String inputPath = "file://"+System.getProperty("user.dir") +"/datasets/ua.base.txt";
 
-		String outputPath = "file://"+System.getProperty("user.dir") +"/results/ItemFeatureMatixUpdate_i=100";
+		String outputPath = "file://"+System.getProperty("user.dir") +"/results/ItemFeatureMatixUpdate";
 
 
 		System.out.println("Reading input from " + inputPath);
 		System.out.println("Writing output to " + outputPath);
 
-		Plan toExecute = new MatrixFactorizationPlan().getPlan(inputPath, outputPath);
+		Plan toExecute = new FeatureMatrixUpdatePlan().getPlan(inputPath, outputPath);
 //		toExecute.setDefaultParallelism(1);
 		Util.executePlan(toExecute);
 		

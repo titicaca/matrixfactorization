@@ -13,8 +13,8 @@ import eu.stratosphere.pact.common.stubs.StubAnnotation.ConstantFields;
 import eu.stratosphere.pact.common.type.PactRecord;
 import eu.stratosphere.pact.common.type.base.PactInteger;
 
-@Combinable
-@ConstantFields(0)
+//@Combinable
+//@ConstantFields(2)
 public class UserFeatureMatrixReducer extends ReduceStub{
 	
 	private final PactRecord outputRecord = new PactRecord();
@@ -29,8 +29,9 @@ public class UserFeatureMatrixReducer extends ReduceStub{
 			currentRecord = records.next();
 
 			//userID starts from 1
-			int userID = currentRecord.getField(0, PactInteger.class).getValue();
+			int userID = currentRecord.getField(2, PactInteger.class).getValue();
 			Vector userFeatureVector = currentRecord.getField(1, PactVector.class).get();
+//			System.out.println("userID:" + userID + " Vector: " + userFeatureVector.toString());
 			PactVector result = new PactVector();
 			result.set(userFeatureVector);
 			outputRecord.setField(userID, result);

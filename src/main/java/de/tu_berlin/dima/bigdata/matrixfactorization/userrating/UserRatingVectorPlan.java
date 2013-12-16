@@ -33,7 +33,7 @@ public class UserRatingVectorPlan implements PlanAssembler, PlanAssemblerDescrip
 		
 		MapContract irMapper = MapContract
 				.builder(UserRatingVectorMapper.class).input(source)
-				.name("Item Rating Vector Mapper").build();
+				.name("User Rating Vector Mapper").build();
 
 		ReduceContract irReducer = ReduceContract
 				.builder(UserRatingVectorReducer.class, PactInteger.class, 0)
