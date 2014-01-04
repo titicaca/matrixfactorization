@@ -4,6 +4,7 @@ import java.util.regex.Pattern;
 
 import com.google.common.primitives.Longs;
 
+import eu.stratosphere.nephele.client.JobExecutionResult;
 import eu.stratosphere.pact.client.LocalExecutor;
 import eu.stratosphere.pact.common.plan.Plan;
 
@@ -16,12 +17,26 @@ public class Util{
 	public static final double lambda = 0.1;
 	public static final int numFeatures = 10;
 	
+	//100k data set
 	public static final int numUsers = 943;
 	public static final int numItems = 1682;
-
+	public static final int maxUserID = 943;
+	public static final int maxItemID = 1682;
 	/** Standard delimiter of textual preference data */
 	private static final Pattern PREFERENCE_TOKEN_DELIMITER = Pattern
 			.compile("[\t,]");
+	
+//	//10m data set
+//	public static final int numUsers = 71567;
+//	public static final int numItems = 10681;
+//	// maxUserID and maxItemID is for loop searching of valid user and item
+//	//TODO use a ID map can be more efficient
+//	public static final int maxUserID = 71567;
+//	public static final int maxItemID = 65133;
+//	/** Standard delimiter of textual preference data */
+//	private static final Pattern PREFERENCE_TOKEN_DELIMITER = Pattern
+//			.compile("::");
+
 
 
 	private Util() {
@@ -57,7 +72,7 @@ public class Util{
 	public static void executePlan(Plan toExecute) throws Exception {
 		LocalExecutor executor = new LocalExecutor();
 		executor.start();
-		long runtime = executor.executePlan(toExecute);
+		JobExecutionResult runtime = executor.executePlan(toExecute);
 		System.out.println("runtime:  " + runtime);
 		executor.stop();
 	}

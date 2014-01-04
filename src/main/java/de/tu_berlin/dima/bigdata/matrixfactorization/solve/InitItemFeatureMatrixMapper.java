@@ -46,5 +46,6 @@ public class InitItemFeatureMatrixMapper extends MapStub{
 		outputRecord.setField(1, featureVector);
 		outputRecord.setField(0, new PactInteger(0));
 		collector.collect(outputRecord);
+		
 	}
 }

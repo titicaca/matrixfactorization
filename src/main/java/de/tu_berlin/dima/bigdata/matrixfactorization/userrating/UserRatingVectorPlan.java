@@ -56,9 +56,9 @@ public class UserRatingVectorPlan implements PlanAssembler, PlanAssemblerDescrip
 	
 	public static void main(String[] args) throws Exception {
 
-		String inputPath = "file://"+System.getProperty("user.dir") +"/datasets/ua.base.txt";
+		String inputPath = "file://"+System.getProperty("user.dir") +"/datasets/10m/ratings.dat";
 
-		String outputPath = "file://"+System.getProperty("user.dir") +"/results/userRating";
+		String outputPath = "file://"+System.getProperty("user.dir") +"/results/10m/userRating";
 
 
 		System.out.println("Reading input from " + inputPath);

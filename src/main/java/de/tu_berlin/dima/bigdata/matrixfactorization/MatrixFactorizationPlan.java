@@ -2,6 +2,7 @@ package de.tu_berlin.dima.bigdata.matrixfactorization;
 
 import de.tu_berlin.dima.bigdata.matrixfactorization.itemrating.ItemRatingVectorMapper;
 import de.tu_berlin.dima.bigdata.matrixfactorization.itemrating.ItemRatingVectorReducer;
+import de.tu_berlin.dima.bigdata.matrixfactorization.prediction.PredictionCrosser;
 import de.tu_berlin.dima.bigdata.matrixfactorization.solve.FeatureMatrixUpdatePlan;
 import de.tu_berlin.dima.bigdata.matrixfactorization.solve.InitItemFeatureMatrixMapper;
 import de.tu_berlin.dima.bigdata.matrixfactorization.solve.ItemFeatureMatrixCrosser;
@@ -22,18 +23,19 @@ import eu.stratosphere.pact.common.io.TextInputFormat;
 import eu.stratosphere.pact.common.plan.Plan;
 import eu.stratosphere.pact.common.plan.PlanAssembler;
 import eu.stratosphere.pact.common.plan.PlanAssemblerDescription;
+import eu.stratosphere.pact.common.type.base.PactFloat;
 import eu.stratosphere.pact.common.type.base.PactInteger;
 import eu.stratosphere.pact.common.type.base.PactString;
 import eu.stratosphere.pact.generic.contract.IterationContract;
 
 public class MatrixFactorizationPlan implements PlanAssembler, PlanAssemblerDescription{
 	  
-	private final int numIterations = 10;
+	private final int numIterations = 20;
 	
-	private final CrossContract userFeatureMatrixCrossers[] = new CrossContract[100];
-	private final CrossContract itemFeatureMatrixCrossers[] = new CrossContract[100];
-	private final ReduceContract userFeatureMatrixReducers[] = new ReduceContract[100];
-	private final ReduceContract itemFeatureMatrixReducers[] = new ReduceContract[100];
+	private final CrossContract userFeatureMatrixCrossers[] = new CrossContract[numIterations];
+	private final CrossContract itemFeatureMatrixCrossers[] = new CrossContract[numIterations];
+	private final ReduceContract userFeatureMatrixReducers[] = new ReduceContract[numIterations];
+	private final ReduceContract itemFeatureMatrixReducers[] = new ReduceContract[numIterations];
 	
 	@Override
 	public String getDescription() {
@@ -105,30 +107,37 @@ public class MatrixFactorizationPlan implements PlanAssembler, PlanAssemblerDesc
 		
 		itemFeatureMatrixReducers[numIterations-1] = ReduceContract
 				.builder(ItemFeatureMatrixReducer.class, PactInteger.class, 0).input(itemFeatureMatrixCrossers[numIterations-1])
-				.name("Item Feature Matrix Update Reducer " + (numIterations)).build();
+				.name("Item Feature Matrix Update Reducer " + (numIterations)).build();	
 		
+		CrossContract predictCrosser = CrossContract.builder(PredictionCrosser.class)
+				.input1(itemFeatureMatrixCrossers[numIterations-1])
+				.input2(userFeatureMatrixCrossers[numIterations-1])
+				.name("Predict Crosser")
+				.build();
 		
-		
-		
-		FileDataSink sink = new FileDataSink(RecordOutputFormat.class, outputPath, itemFeatureMatrixCrossers[numIterations-1], "Item Feature Vectors");
+		FileDataSink sink = new FileDataSink(RecordOutputFormat.class, outputPath, predictCrosser, "Rating Prediction");
 		RecordOutputFormat.configureRecordFormat(sink)
 			.recordDelimiter('\n')
 			.fieldDelimiter(' ')
-			.field(PactInteger.class, 2)
-			.field(PactVector.class, 1);
+			.field(PactInteger.class, 0)
+			.field(PactInteger.class, 1)
+			.field(PactFloat.class, 2);
 		
 
-
-		Plan plan = new Plan(sink, "Item Feature Matrix Update Computation");
+		Plan plan = new Plan(sink, "Rating Prediction Computation");
 		plan.setDefaultParallelism(numSubtasks);
 
 		return plan;
 	}
 	public static void main(String[] args) throws Exception {
 
-		String inputPath = "file://"+System.getProperty("user.dir") +"/datasets/ua.base.txt";
+//		String inputPath = "file://"+System.getProperty("user.dir") +"/datasets/10m/r1.train";
+//
+//		String outputPath = "file://"+System.getProperty("user.dir") +"/results/10m/Prediction__r1_i=20";
+		
+		String inputPath = "file://"+System.getProperty("user.dir") +"/datasets/100k/ua.base.txt";
 
-		String outputPath = "file://"+System.getProperty("user.dir") +"/results/ItemFeatureMatixUpdate_i=100";
+		String outputPath = "file://"+System.getProperty("user.dir") +"/results/100k/Prediction_ua_i=20.result";
 
 
 		System.out.println("Reading input from " + inputPath);

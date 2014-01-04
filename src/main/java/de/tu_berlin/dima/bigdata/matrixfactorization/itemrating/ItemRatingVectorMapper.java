@@ -24,6 +24,7 @@ public class ItemRatingVectorMapper extends MapStub{
 	public void map(PactRecord record, Collector<PactRecord> collector)
 			throws Exception {
 		String text = record.getField(0, PactString.class).toString();
+//		System.out.println(text);
 		String[] tokens = Util.splitPrefTokens(text);
 		int userID = Util.readID(tokens[Util.USER_ID_POS]);
 		int itemID = Util.readID(tokens[Util.ITEM_ID_POS]);

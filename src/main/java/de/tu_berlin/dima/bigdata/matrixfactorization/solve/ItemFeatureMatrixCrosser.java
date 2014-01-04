@@ -31,18 +31,18 @@ public class ItemFeatureMatrixCrosser extends CrossStub{
 		Vector itemRatingVector = itemRatingVectorRecord.getField(1, PactVector.class).get();
 		
 		
-		int numItems = userFeatureMatrixRecord.getField(0, PactInteger.class).getValue();
+		int numUsers = userFeatureMatrixRecord.getField(0, PactInteger.class).getValue();
 //		System.out.println("numItems:" + numItems);
 
-		OpenIntObjectHashMap<Vector> itemFeatureMatrix = numItems > 0
-			        ? new OpenIntObjectHashMap<Vector>(numItems) : new OpenIntObjectHashMap<Vector>();
+		OpenIntObjectHashMap<Vector> userFeatureMatrix = numUsers > 0
+			        ? new OpenIntObjectHashMap<Vector>(numUsers) : new OpenIntObjectHashMap<Vector>();
 		
-		for(int i = 1; i <= numItems; i ++){
+		for(int i = 1; i <= Util.maxUserID; i ++){
 //			System.out.println(i);
 			if(!userFeatureMatrixRecord.isNull(i)){
 				Vector tmp = userFeatureMatrixRecord.getField(i, PactVector.class).get();
 //				System.out.println(tmp.toString());
-				itemFeatureMatrix.put(i, tmp);
+				userFeatureMatrix.put(i, tmp);
 			}
 //			System.out.println("size:" + itemFeatureMatrix.size());
 //			System.out.println("numFields:" +userFeatureMatrixRecord.getNumFields());
@@ -51,7 +51,9 @@ public class ItemFeatureMatrixCrosser extends CrossStub{
 		List<Vector> featureVectors = Lists.newArrayListWithCapacity(itemRatingVector.getNumNondefaultElements());
 	    for (Vector.Element e : itemRatingVector.nonZeroes()) {
 	      int index = e.index();
-	      featureVectors.add(itemFeatureMatrix.get(index));
+	      if(userFeatureMatrix.containsKey(index)){
+	    	  featureVectors.add(userFeatureMatrix.get(index));	    	  
+	      }
 	    }
 		
 		Vector userFeatureVector = AlternatingLeastSquaresSolver.solve(featureVectors, itemRatingVector, lambda, numFeatures);
