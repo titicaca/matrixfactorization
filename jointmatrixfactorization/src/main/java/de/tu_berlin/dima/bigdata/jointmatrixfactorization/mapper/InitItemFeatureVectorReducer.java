@@ -25,10 +25,9 @@ import eu.stratosphere.pact.common.type.base.PactInteger;
 public class InitItemFeatureVectorReducer extends ReduceStub{
 
 	private final Vector features = new SequentialAccessSparseVector(Integer.MAX_VALUE, Util.numFeatures);
-	
+	private final Random random = new Random();
 	private final PactRecord outputRecord = new PactRecord();
 	private final int numFeatures = Util.numFeatures;
-	private final Random random = new Random();
 	private final PactVector featureVector = new PactVector();
 
 	

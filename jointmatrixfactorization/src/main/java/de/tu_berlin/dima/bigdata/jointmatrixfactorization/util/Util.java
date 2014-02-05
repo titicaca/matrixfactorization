@@ -1,5 +1,6 @@
 package de.tu_berlin.dima.bigdata.jointmatrixfactorization.util;
 
+import java.util.Random;
 import java.util.regex.Pattern;
 
 import com.google.common.primitives.Longs;

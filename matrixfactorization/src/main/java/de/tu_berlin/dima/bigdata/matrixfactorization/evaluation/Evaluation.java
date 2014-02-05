@@ -54,7 +54,7 @@ public class Evaluation{
 	}
 	
 	public static void main(String [] args) throws IOException{
-		String predict = "results/100k/Prediction_ua_i=20.result";
+		String predict = "results/100k/Prediction_ua_i=15.result";
 		String test = "datasets/100k/ua.test.txt";
 		Pattern DELIMITER_test = Pattern.compile("[\t]");
 		Pattern DELIMITER_predict = Pattern.compile(" ");
